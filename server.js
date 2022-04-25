@@ -20,14 +20,19 @@ process.on('unhandledRejection', (reason, p) => {
 // });
 
 app.get("/getClassIds", async (req, res) => {
-  db.connect.query(`select * from EA_SectionMaster sm where 1= 2;
+  try {
+    db.connect.query(`select * from EA_SectionMaster sm where 1= 2;
   select top 10 sm.SubjectID , sm.SubjectCode , sm.SubjectName , 
   '3EF16A5E-0949-4E1D-8471-0000064F707C' as ClassId , '12th' as ClassName from SubjectMaster sm `, function (err, classIdsData) {
 
-    if (err) console.log(err)
+      if (err) console.log(err)
 
-    res.send(classIdsData.recordsets[1]);
-  }); 
+      res.send(classIdsData.recordsets[1]);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+
 })
 
 app.listen(port, () => {
