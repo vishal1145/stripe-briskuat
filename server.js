@@ -27,7 +27,7 @@ app.get("/getClassIds", async (req, res) => {
     if (err) console.log(err)
 
     res.send(classIdsData.recordsets[1]);
-  });
+  }); 
 })
 
 app.listen(port, () => {
