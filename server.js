@@ -2,9 +2,10 @@ const express = require("express");
 const app = express();
 const stripe = require("./stripe");
 const port = process.env.PORT || 1600;
-
+var cors = require('cors')
 const db = require('./connectDB')
 app.use(express.json());
+app.use(cors())
 process.on('unhandledRejection', (reason, p) => {
   console.error('Unhandled Rejection at:', p, 'reason:', reason)
 });
