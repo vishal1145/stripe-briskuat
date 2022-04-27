@@ -23,14 +23,14 @@ function runQuery(query) {
 router.post('/create-checkout-session', async (req, res) => {
     var orderId = new Date().getTime();
     try {
-        var { unit_amount, classId, subjectId, email, url } = req.body;
+        var { unit_amount, data, email, url, product_name } = req.body;
         const session = await stripe.checkout.sessions.create({
             line_items: [
                 {
                     price_data: {
                         currency: "INR",
                         product_data: {
-                            name: classId + subjectId,
+                            name: product_name,
                         },
                         unit_amount: unit_amount * 100,
                     },
@@ -42,9 +42,10 @@ router.post('/create-checkout-session', async (req, res) => {
             success_url: `${url}/${orderId}`,
             cancel_url: `${url}/${orderId}`,
         });
-        db.connect.query(`insert into TestLoItems(classId, subjectId, price, quantity, stripeSessionId, email, orderId) 
-    values('${classId}','${subjectId}', ${unit_amount}, 1, '${session.id}' ,'${email}', '${orderId}')`)
-
+        for (var i = 0; i < (data || []).length; i++) {
+            db.connect.query(`insert into TestLoItems(classId, subjectId, price, quantity, stripeSessionId, email, orderId) 
+    values('${data[i].classId}','${data[i].subjectId}', ${unit_amount}, 1, '${session.id}' ,'${email}', '${orderId}')`)
+        }
         res.send(session.url);
     } catch (error) {
         console.log(error);
