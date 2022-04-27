@@ -23,20 +23,20 @@ function runQuery(query) {
 router.post('/create-checkout-session', async (req, res) => {
     var orderId = new Date().getTime();
     try {
-        var { unit_amount, data, email, url, product_name } = req.body;
+        var { data, email, url } = req.body;
         const session = await stripe.checkout.sessions.create({
-            line_items: [
-                {
+            line_items: data.map((item) => {
+                return {
                     price_data: {
                         currency: "INR",
                         product_data: {
-                            name: product_name,
+                            name: item.className,
                         },
-                        unit_amount: unit_amount * 100,
+                        unit_amount: item.amount * 100,
                     },
                     quantity: 1,
-                },
-            ],
+                }
+            }),
             mode: 'payment',
 
             success_url: `${url}/${orderId}`,
@@ -44,7 +44,7 @@ router.post('/create-checkout-session', async (req, res) => {
         });
         for (var i = 0; i < (data || []).length; i++) {
             db.connect.query(`insert into TestLoItems(classId, subjectId, price, quantity, stripeSessionId, email, orderId) 
-    values('${data[i].classId}','${data[i].subjectId}', ${unit_amount}, 1, '${session.id}' ,'${email}', '${orderId}')`)
+    values('${data[i].classId}','${data[i].subjectId}', ${data[i].amount}, 1, '${session.id}' ,'${email}', '${orderId}')`)
         }
         res.send(session.url);
     } catch (error) {
