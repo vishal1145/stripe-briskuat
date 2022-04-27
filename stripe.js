@@ -32,7 +32,7 @@ router.post('/create-checkout-session', async (req, res) => {
                         product_data: {
                             name: item.className,
                         },
-                        unit_amount: item.amount * 100,
+                        unit_amount: +item.amount * 100,
                     },
                     quantity: 1,
                 }
@@ -42,9 +42,13 @@ router.post('/create-checkout-session', async (req, res) => {
             success_url: `${url}/${orderId}`,
             cancel_url: `${url}/${orderId}`,
         });
-        for (var i = 0; i < (data || []).length; i++) {
-            db.connect.query(`insert into TestLoItems(classId, subjectId, price, quantity, stripeSessionId, email, orderId) 
+        try {
+            for (var i = 0; i < (data || []).length; i++) {
+                db.connect.query(`insert into TestLoItems(classId, subjectId, price, quantity, stripeSessionId, email, orderId) 
     values('${data[i].classId}','${data[i].subjectId}', ${data[i].amount}, 1, '${session.id}' ,'${email}', '${orderId}')`)
+            }
+        } catch (err) {
+
         }
         res.send(session.url);
     } catch (error) {
