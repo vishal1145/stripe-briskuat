@@ -22,12 +22,11 @@ process.on('unhandledRejection', (reason, p) => {
 
 app.get("/getClassIds", async (req, res) => {
   try {
-    db.connect.query(`select distinct SubjectMaster.SubjectID , SubjectMaster.SubjectCode , SubjectMaster.SubjectName,
-    ClassMaster.ClassId , ClassMaster.ClassName
-    from ClassMaster ClassMaster
-    inner join EA_SubjectMaster on ClassMaster.ClassId = EA_SubjectMaster.ClassId
-    inner join SubjectMaster on SubjectMaster.SubjectId = EA_SubjectMaster.SubjectId and SubjectMaster.SubjectStatus = 1
-    where ClassMaster.IsShowInTestLo = 1 and SubjectMaster.IsShowInTestLo = 1`, function (err, classIdsData) {
+    db.connect.query(`select top 3 sm.SubjectID , sm.SubjectCode , sm.SubjectName , 
+    '3EF16A5E-0949-4E1D-8471-0000064F707C' as ClassId , '12th' as ClassName from SubjectMaster sm 
+    union
+    select top 5 sm.SubjectID , sm.SubjectCode , sm.SubjectName , 
+    '3EF16A5E-0949-4E1D-8471-0000064F707A' as ClassId , '11th' as ClassName from SubjectMaster sm `, function (err, classIdsData) {
 
       if (err) console.log(err)
 
