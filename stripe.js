@@ -20,32 +20,39 @@ function runQuery(query) {
     })
 }
 
+router.get('/get-price-ids', async (req, res) => {
+    const prices = await stripe.prices.list({
+    });
+    res.send({ success: true, prices: prices })
+})
+
 router.post('/create-checkout-session', async (req, res) => {
+
     var orderId = new Date().getTime();
     try {
-        var { data, email, url } = req.body;
+        var { data, email, url, mobileNumber } = req.body;
         const session = await stripe.checkout.sessions.create({
-            line_items: data.map((item) => {
-                return {
-                    price_data: {
-                        currency: "INR",
-                        product_data: {
-                            name: item.className,
-                        },
-                        unit_amount: +item.amount * 100,
-                    },
-                    quantity: 1,
+            // line_items: data.map((item) => {
+            //     return {
+            //         price: item.priceId,
+            //         quantity: 1,
+            //     }
+            // }),
+            line_items: [
+                {
+                    price: data[0].priceId,
+                    quantity: data.length,
                 }
-            }),
-            mode: 'payment',
+            ],
+            mode: 'subscription',
 
             success_url: `${url}/${orderId}`,
             cancel_url: `${url}/${orderId}`,
         });
         try {
             for (var i = 0; i < (data || []).length; i++) {
-                db.connect.query(`insert into TestLoItems(classId, subjectId, price, quantity, stripeSessionId, email, orderId) 
-    values('${data[i].classId}','${data[i].subjectId}', ${data[i].amount}, 1, '${session.id}' ,'${email}', '${orderId}')`)
+                db.connect.query(`insert into TestLoItems(classId, subjectId, quantity, stripeSessionId, email, mobileNumber, orderId) 
+            values('${data[i].classId}','${data[i].subjectId}', ${data.length}, '${session.id}' ,'${email}', '${mobileNumber}','${orderId}')`)
             }
         } catch (err) {
 
@@ -72,7 +79,6 @@ router.get('/postPayment/:orderId', async (req, res) => {
     } catch (error) {
         console.log(error);
     }
-
 })
 
 module.exports = router;

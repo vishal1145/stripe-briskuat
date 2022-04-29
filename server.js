@@ -37,6 +37,15 @@ app.get("/getClassIds", async (req, res) => {
   }
 
 })
+app.get('/getOrderDetails', async (req, res) => {
+  try {
+    const orderId = req.query.orderId;
+    const orderRecord = await db.connect.query(`SELECT * FROM TestLoItems WHERE orderId = '${orderId}'`)
+    res.send({ success: true, orderDetails: orderRecord.recordset[0] })
+  } catch (error) {
+    console.log(error);
+  }
+})
 
 app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);
