@@ -23,7 +23,19 @@ function runQuery(query) {
 router.get('/get-price-ids', async (req, res) => {
     const prices = await stripe.prices.list({
     });
-    res.send({ success: true, prices: prices })
+    let priceData = []
+    for (var i = 0; i < (prices.data || []).length; i++) {
+        const product = await stripe.products.retrieve(
+            prices.data[i].product
+        );
+        const priceInfo = {
+            id: prices.data[i].id,
+            unit_amount: (prices.data[i].unit_amount)/100,
+            name: product.name
+        }
+        priceData.push(priceInfo)
+    }
+    res.send({ success: true, priceData: priceData })
 })
 
 router.post('/create-checkout-session', async (req, res) => {
