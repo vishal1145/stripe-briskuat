@@ -22,6 +22,7 @@ function runQuery(query) {
 
 router.get('/get-price-ids', async (req, res) => {
     const prices = await stripe.prices.list({
+        active: true
     });
     let priceData = []
     for (var i = 0; i < (prices.data || []).length; i++) {
