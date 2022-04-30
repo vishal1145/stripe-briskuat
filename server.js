@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const stripe = require("./stripe");
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 1600;
 var cors = require('cors')
 const db = require('./connectDB')
 app.use(express.json());
