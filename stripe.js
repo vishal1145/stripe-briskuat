@@ -57,6 +57,7 @@ router.post('/create-checkout-session', async (req, res) => {
                 }
             ],
             mode: 'subscription',
+            customer_email:email,
 
             success_url: `${url}/${orderId}`,
             cancel_url: `${url}/${orderId}`,
