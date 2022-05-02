@@ -22,7 +22,8 @@ function runQuery(query) {
 
 router.get('/get-price-ids', async (req, res) => {
     const prices = await stripe.prices.list({
-        active: true
+        active: true,
+        type: "recurring"
     });
     let priceData = []
     for (var i = 0; i < (prices.data || []).length; i++) {
@@ -31,7 +32,7 @@ router.get('/get-price-ids', async (req, res) => {
         );
         const priceInfo = {
             id: prices.data[i].id,
-            unit_amount: (prices.data[i].unit_amount)/100,
+            unit_amount: (prices.data[i].unit_amount) / 100,
             name: product.name
         }
         priceData.push(priceInfo)
@@ -40,42 +41,59 @@ router.get('/get-price-ids', async (req, res) => {
 })
 
 router.post('/create-checkout-session', async (req, res) => {
-
     var orderId = new Date().getTime();
-    try {
-        var { data, email, url, mobileNumber } = req.body;
+    var { data, email, url, mobileNumber, isOneTime, priceId } = req.body;
+    if (isOneTime) {
+        isOneTime = 1;
         const session = await stripe.checkout.sessions.create({
-            // line_items: data.map((item) => {
-            //     return {
-            //         price: item.priceId,
-            //         quantity: 1,
-            //     }
-            // }),
             line_items: [
                 {
-                    price: data[0].priceId,
-                    quantity: data.length,
+                    price: priceId,
+                    quantity: 1,
                 }
             ],
-            mode: 'subscription',
-            customer_email:email,
+            mode: 'payment',
+            customer_email: email,
 
             success_url: `${url}/${orderId}`,
             cancel_url: `${url}/${orderId}`,
         });
         try {
-            for (var i = 0; i < (data || []).length; i++) {
-                db.connect.query(`insert into TestLoItems(classId, subjectId, quantity, stripeSessionId, email, mobileNumber, orderId) 
-            values('${data[i].classId}','${data[i].subjectId}', ${data.length}, '${session.id}' ,'${email}', '${mobileNumber}','${orderId}')`)
-            }
+            db.connect.query(`insert into TestLoItems(quantity, stripeSessionId, isOneTime, email, mobileNumber, orderId) 
+            values(1, '${session.id}', ${isOneTime} ,'${email}', '${mobileNumber}','${orderId}')`)
         } catch (err) {
 
         }
         res.send(session.url);
-    } catch (error) {
-        console.log(error);
-    }
+    } else {
+        isOneTime = 0;
+        try {
+            const session = await stripe.checkout.sessions.create({
+                line_items: [
+                    {
+                        price: data[0].priceId,
+                        quantity: data.length,
+                    }
+                ],
+                mode: 'subscription',
+                customer_email: email,
 
+                success_url: `${url}/${orderId}`,
+                cancel_url: `${url}/${orderId}`,
+            });
+            try {
+                for (var i = 0; i < (data || []).length; i++) {
+                    db.connect.query(`insert into TestLoItems(classId, subjectId, quantity, stripeSessionId, isOneTime, email, mobileNumber, orderId) 
+                values('${data[i].classId}','${data[i].subjectId}', ${data.length}, '${session.id}', ${isOneTime} ,'${email}', '${mobileNumber}','${orderId}')`)
+                }
+            } catch (err) {
+
+            }
+            res.send(session.url);
+        } catch (error) {
+            console.log(error);
+        }
+    }
 });
 
 router.get('/postPayment/:orderId', async (req, res) => {

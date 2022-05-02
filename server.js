@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const stripe = require("./stripe");
+const stripeCalls = require("./stripe");
 const port = process.env.PORT || 1600;
 var cors = require('cors')
 const db = require('./connectDB')
@@ -9,6 +9,9 @@ app.use(cors())
 process.on('unhandledRejection', (reason, p) => {
   console.error('Unhandled Rejection at:', p, 'reason:', reason)
 });
+require('dotenv').config()
+const Stripe_Key = process.env.STRIPEKEY;
+const stripe = require("stripe")(Stripe_Key);
 // app.get('/', async (req, res) => {
 
 //    db.connect.query('select * from AcademicYearMaster', function (err, academicYearRecord) {
@@ -37,9 +40,13 @@ app.get("/getClassIds", async (req, res) => {
   }
 
 })
-app.get('/getOrderDetails', async (req, res) => {
+app.get('/getOrderDetails/:orderId', async (req, res) => {
   try {
-    const orderId = req.query.orderId;
+    const orderId = req.params.orderId;
+    let records = await db.connect.query(`select * from TestLoItems where orderId = ${orderId}`);
+    const stripeId = records.recordset[0].stripeSessionId
+    const paymentData = await stripe.checkout.sessions.retrieve(stripeId)
+    await db.connect.query(`update TestLoItems set payStatus = '${paymentData.payment_status}' WHERE orderId = '${orderId}'`);
     const orderRecord = await db.connect.query(`SELECT * FROM TestLoItems WHERE orderId = '${orderId}'`)
     res.send({ success: true, orderDetails: orderRecord.recordset[0] })
   } catch (error) {
@@ -51,4 +58,4 @@ app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);
 });
 
-app.use("/", stripe);
+app.use("/", stripeCalls);
