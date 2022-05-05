@@ -37,7 +37,7 @@ app.get("/getClassIds", async (req, res) => {
                     AND subjectmaster.subjectstatus = 1
                          where ClassMaster.isshowintestlo = 1
                          and subjectmaster.isshowintestlo = 1
-                         and ea_subjectmaster.instituteid = '${id}'`, function (err, classIdsData) {
+                         and ea_subjectmaster.instituteid = '${id}' order by SubjectCode`, function (err, classIdsData) {
 
       if (err) console.log(err)
 
