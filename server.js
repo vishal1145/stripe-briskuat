@@ -24,12 +24,20 @@ const stripe = require("stripe")(Stripe_Key);
 // });
 
 app.get("/getClassIds", async (req, res) => {
+  const id = req.query.id;
   try {
-    db.connect.query(`select top 3 sm.SubjectID , sm.SubjectCode , sm.SubjectName , 
-    '3EF16A5E-0949-4E1D-8471-0000064F707C' as ClassId , '12th' as ClassName from SubjectMaster sm 
-    union
-    select top 5 sm.SubjectID , sm.SubjectCode , sm.SubjectName , 
-    '3EF16A5E-0949-4E1D-8471-0000064F707A' as ClassId , '11th' as ClassName from SubjectMaster sm `, function (err, classIdsData) {
+    db.connect.query(`select classmaster.ClassId, classmaster.ClassName, subjectmaster.subjectid as SubjectID,  SubjectName, SubjectCode
+    from ClassMaster	
+                         INNER JOIN ea_subjectmaster
+                                   ON ea_subjectmaster.classid =
+                                      classmaster.classid
+                     INNER JOIN subjectmaster
+                                   ON subjectmaster.subjectid =
+                                      ea_subjectmaster.subjectid
+                    AND subjectmaster.subjectstatus = 1
+                         where ClassMaster.isshowintestlo = 1
+                         and subjectmaster.isshowintestlo = 1
+                         and ea_subjectmaster.instituteid = '${id}'`, function (err, classIdsData) {
 
       if (err) console.log(err)
 
