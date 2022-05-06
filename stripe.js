@@ -45,6 +45,10 @@ router.post('/create-checkout-session', async (req, res) => {
     var { data, email, url, mobileNumber, isOneTime, priceId } = req.body;
     if (isOneTime) {
         isOneTime = 1;
+        const price = await stripe.prices.retrieve(
+            priceId
+          );
+
         const session = await stripe.checkout.sessions.create({
             line_items: [
                 {
@@ -59,8 +63,8 @@ router.post('/create-checkout-session', async (req, res) => {
             cancel_url: `${url}/${orderId}`,
         });
         try {
-            db.connect.query(`insert into TestLoItems(quantity, stripeSessionId, isOneTime, email, mobileNumber, orderId) 
-            values(1, '${session.id}', ${isOneTime} ,'${email}', '${mobileNumber}','${orderId}')`)
+            db.connect.query(`insert into TestLoItems(quantity, stripeSessionId, isOneTime, email, mobileNumber, orderId, intervals) 
+            values(1, '${session.id}', ${isOneTime} ,'${email}', '${mobileNumber}','${orderId}', '${price.type}')`)
         } catch (err) {
 
         }
@@ -68,6 +72,10 @@ router.post('/create-checkout-session', async (req, res) => {
     } else {
         isOneTime = 0;
         try {
+            const price = await stripe.prices.retrieve(
+                data[0].priceId
+              );
+
             const session = await stripe.checkout.sessions.create({
                 line_items: [
                     {
@@ -83,8 +91,8 @@ router.post('/create-checkout-session', async (req, res) => {
             });
             try {
                 for (var i = 0; i < (data || []).length; i++) {
-                    db.connect.query(`insert into TestLoItems(classId, subjectId, quantity, stripeSessionId, isOneTime, email, mobileNumber, orderId) 
-                values('${data[i].classId}','${data[i].subjectId}', ${data.length}, '${session.id}', ${isOneTime} ,'${email}', '${mobileNumber}','${orderId}')`)
+                    db.connect.query(`insert into TestLoItems(classId, subjectId, quantity, stripeSessionId, isOneTime, email, mobileNumber, orderId, intervals) 
+                values('${data[i].classId}','${data[i].subjectId}', ${data.length}, '${session.id}', ${isOneTime} ,'${email}', '${mobileNumber}','${orderId}', '${price.recurring.interval}')`)
                 }
             } catch (err) {
 
