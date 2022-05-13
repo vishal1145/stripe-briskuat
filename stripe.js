@@ -42,7 +42,7 @@ router.get('/get-price-ids', async (req, res) => {
 
 router.post('/create-checkout-session', async (req, res) => {
     var orderId = new Date().getTime();
-    var { data, email, url, mobileNumber, isOneTime, priceId } = req.body;
+    var { data, email, name, url, mobileNumber, isOneTime, priceId } = req.body;
     if (isOneTime) {
         isOneTime = 1;
         const price = await stripe.prices.retrieve(
@@ -63,8 +63,8 @@ router.post('/create-checkout-session', async (req, res) => {
             cancel_url: `${url}/${orderId}`,
         });
         try {
-            db.connect.query(`insert into TestLoItems(quantity, stripeSessionId, isOneTime, email, mobileNumber, orderId, intervals) 
-            values(1, '${session.id}', ${isOneTime} ,'${email}', '${mobileNumber}','${orderId}', '${price.type}')`)
+            db.connect.query(`insert into TestLoItems(quantity, stripeSessionId, isOneTime, email, name, mobileNumber, orderId, intervals) 
+            values(1, '${session.id}', ${isOneTime} ,'${email}','${name}' ,'${mobileNumber}','${orderId}', '${price.type}')`)
         } catch (err) {
 
         }
@@ -91,8 +91,8 @@ router.post('/create-checkout-session', async (req, res) => {
             });
             try {
                 for (var i = 0; i < (data || []).length; i++) {
-                    db.connect.query(`insert into TestLoItems(classId, subjectId, quantity, stripeSessionId, isOneTime, email, mobileNumber, orderId, intervals) 
-                values('${data[i].classId}','${data[i].subjectId}', ${data.length}, '${session.id}', ${isOneTime} ,'${email}', '${mobileNumber}','${orderId}', '${price.recurring.interval}')`)
+                    db.connect.query(`insert into TestLoItems(classId, subjectId, quantity, stripeSessionId, isOneTime, email, name, mobileNumber, orderId, intervals) 
+                values('${data[i].classId}','${data[i].subjectId}', 1, '${session.id}', ${isOneTime} ,'${email}','${name}' ,'${mobileNumber}','${orderId}', '${price.recurring.interval}')`)
                 }
             } catch (err) {
 
