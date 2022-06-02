@@ -45,14 +45,14 @@ router.post('/create-checkout-session', async (req, res) => {
     var { data, email, name, url, mobileNumber, isOneTime, priceId } = req.body;
     if (isOneTime) {
         isOneTime = 1;
-        const price = await stripe.prices.retrieve(
-            priceId
-          );
-
+        let interval;
+        priceId = priceId.split('|')
+        if (priceId[1] == 1) (interval = 'month')
+        if (priceId[1] == 12) (interval = 'year')
         const session = await stripe.checkout.sessions.create({
             line_items: [
                 {
-                    price: priceId,
+                    price: priceId[0],
                     quantity: 1,
                 }
             ],
@@ -64,7 +64,7 @@ router.post('/create-checkout-session', async (req, res) => {
         });
         try {
             db.connect.query(`insert into TestLoItems(quantity, stripeSessionId, isOneTime, email, name, mobileNumber, orderId, intervals) 
-            values(1, '${session.id}', ${isOneTime} ,'${email}','${name}' ,'${mobileNumber}','${orderId}', '${price.type}')`)
+            values(1, '${session.id}', ${isOneTime} ,'${email}','${name}' ,'${mobileNumber}','${orderId}', '${interval}')`)
         } catch (err) {
 
         }
@@ -74,7 +74,7 @@ router.post('/create-checkout-session', async (req, res) => {
         try {
             const price = await stripe.prices.retrieve(
                 data[0].priceId
-              );
+            );
 
             const session = await stripe.checkout.sessions.create({
                 line_items: [
